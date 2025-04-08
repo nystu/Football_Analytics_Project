@@ -4,8 +4,9 @@ CREATE TABLE Player (
     LastName VARCHAR(255) NOT NULL,
     Height INT NOT NULL, -- Height in inches
     College VARCHAR(255), -- Optional field
-    Position VARCHAR(255) NOT NULL,
     DOB DATE NOT NULL, -- DOB will be a date
     PRIMARY KEY (PlayerID),
     CHECK (Height > 0) -- Make sure height is greater than 0
 );
+
+
