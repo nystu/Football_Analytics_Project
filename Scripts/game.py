@@ -66,11 +66,11 @@ soup = BeautifulSoup(html, "html.parser")
 # The caption text is used to identify the correct table in the HTML.
 caption = soup.find("caption", string=CAPTION_TEXT)
 if not caption:
-    print("Could not find caption with schedule table.")
+    print("ERROR: Could not find caption with schedule table.")
     exit()
 table = caption.find_parent("table")
 if not table:
-    print("Could not find schedule table element.")
+    print("ERROR: Could not find schedule table element.")
     exit()
 print("Schedule table found.")
 
@@ -120,7 +120,7 @@ for row in rows:
     else:
         week = WEEK_LABELS.get(week_raw.replace(" ", ""))
         if not week:
-            print(f"⚠️ Unknown week label: {week_raw}")
+            print(f"ERROR: Unknown week label: {week_raw}")
             continue
 
     # --- Season Type ---
@@ -136,7 +136,7 @@ for row in rows:
         game_date = datetime.strptime(game_date_raw, "%Y-%m-%d").date()
         game_time = datetime.strptime(game_time_raw, "%I:%M%p").time()
     except Exception as e:
-        print(f"⚠️ Error parsing datetime: {e}")
+        print(f"ERROR parsing datetime: {e}")
         continue
     
     # --- Winner and Loser ---
@@ -146,7 +146,7 @@ for row in rows:
     winner_abbr = TEAM_NAME_TO_ABBR.get(winner)
     loser_abbr = TEAM_NAME_TO_ABBR.get(loser)
     if not winner_abbr or not loser_abbr:
-        print(f"Unknown team abbreviation: {winner} / {loser}")
+        print(f"ERROR: Unknown team abbreviation: {winner} / {loser}")
         continue
 
     # --- TeamID Lookup ---
@@ -158,7 +158,7 @@ for row in rows:
     cursor.execute("SELECT TeamID FROM Team WHERE Abbreviation = %s", (loser_abbr,))
     loser_team_id = cursor.fetchone()
     if not winner_team_id or not loser_team_id:
-        print(f"⚠️ Missing TeamIDs for {winner} or {loser}")
+        print(f"ERROR: Missing TeamIDs for {winner} or {loser}")
         break
     
     # Assigning the TeamIDs to variables
@@ -181,7 +181,7 @@ for row in rows:
         WHERE SeasonID = %s AND GameWeek = %s AND HomeTeamID = %s AND AwayTeamID = %s
     """, (SEASON_ID, week, home_team_id, away_team_id))
     if cursor.fetchone():
-        print(f"Duplicate game: Week {week} {winner} vs {loser}")
+        print(f"ERROR: Duplicate game: Week {week} {winner} vs {loser}")
         break
 
 
@@ -210,7 +210,7 @@ for row in rows:
         winner_score = int(winner_score_raw)
         loser_score = int(loser_score_raw)
     except ValueError:
-        print(f"Invalid score: {winner_score_raw} or {loser_score_raw}")
+        print(f"ERROR: Invalid score: {winner_score_raw} or {loser_score_raw}")
         continue
 
     # --- Insert into GameParticipant ---
@@ -230,6 +230,8 @@ for row in rows:
     inserted += 1 # Increment the inserted count
     print(f"Inserted Week {week} ({season_type}): {winner} vs {loser}")
 
+
+
 # --- Commit and Close ---
 # Commits the changes to the database and closes the cursor and connection.
 # conn.commit() saves the changes to the database.
@@ -238,4 +240,4 @@ for row in rows:
 conn.commit()
 cursor.close()
 conn.close()
-print(f"\n🎉 Done! Inserted {inserted} games and GameParticipant rows.")
+print(f"\nFINISHED! Inserted {inserted} games and GameParticipant rows.")
