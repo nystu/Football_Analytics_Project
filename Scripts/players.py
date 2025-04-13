@@ -2,6 +2,7 @@ import requests # Fetches HTML from the web
 from bs4 import BeautifulSoup, Comment # Parses the HTML content and allows us to navigate and search through it
 import mysql.connector # Connects to MySQL database
 from datetime import datetime # Handles date and time formatting
+import time # Added to insert a sleep delay between requests
 
 
 
@@ -43,6 +44,12 @@ for abbr in team_abbrs:
     html = requests.get(url).text 
     soup = BeautifulSoup(html, "html.parser") 
 
+    # This time.sleep(2) is used to pause the execution of the script for 2 seconds.
+    # This is done to avoid overwhelming the server with too many requests in a short period of time.
+    # Which could lead to rate-limiting or blocking of the IP address. 
+    # It's a good practice to include a delay between requests when scraping data from websites.
+    time.sleep(2) # Sleep between requests to avoid rate-limiting
+    
     # --- Find the roster table ---
     # The roster table is embedded in a comment in the HTML.
     # So we need to find the comment that contains the table.
@@ -140,4 +147,4 @@ for abbr in team_abbrs:
 conn.commit()
 cursor.close()
 conn.close()
-print(f"\nFINISHED! Inserted {inserted} games and GameParticipant rows.")
+print(f"\nFINISHED! Inserted {inserted_total} players.")
