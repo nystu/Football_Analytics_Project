@@ -11,9 +11,6 @@ CREATE TABLE TeamRoster (
 	StartDate DATE NOT NULL,
     EndDate DATE NOT NULL,
     JerseyNumber TINYINT, -- Player’s jersey number (1–99)
-    Weight TINYINT NOT NULL, -- Player’s weight (in pounds, simplified to TINYINT for storage efficiency)
-    Height TINYINT NOT NULL, -- Player’s height (in inches, e.g., 72 = 6 ft)
-    Position VARCHAR(10) NOT NULL, -- Player’s position (e.g., QB, WR, LB)
 
     FOREIGN KEY (PlayerID) REFERENCES Player(PlayerID), -- Ensures the player exists in the Player table
     FOREIGN KEY (TeamID) REFERENCES Team(TeamID), -- Ensures the team exists in the Team table
