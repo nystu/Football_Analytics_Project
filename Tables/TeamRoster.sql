@@ -8,6 +8,8 @@ CREATE TABLE TeamRoster (
     PlayerID INT NOT NULL, -- Foreign key: identifies the player
     TeamID INT NOT NULL, -- Foreign key: identifies the team
     SeasonID INT NOT NULL, -- Foreign key: identifies the season the player was on the roster
+	StartDate DATE NOT NULL,
+    EndDate DATE NOT NULL,
     JerseyNumber TINYINT, -- Player’s jersey number (1–99)
     Weight TINYINT NOT NULL, -- Player’s weight (in pounds, simplified to TINYINT for storage efficiency)
     Height TINYINT NOT NULL, -- Player’s height (in inches, e.g., 72 = 6 ft)
