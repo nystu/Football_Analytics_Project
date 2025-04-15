@@ -27,31 +27,9 @@ season_id = 2425
 LOG_FILE = "slug_failures.log"
 
 # --- Execute SQL Query ---
-# This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table,
-# but only for the PlayerIDs that previously failed slug matching attempts.
+# This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table.
 # The results are ordered by PlayerID in ascending order.
-
-target_ids = [
-    99, 127, 131, 132, 189, 191, 196, 202, 216, 241, 253, 254, 255, 256, 257, 262,
-    276, 286, 289, 295, 298, 305, 310, 315, 327, 330, 352, 362, 363, 399, 402, 464, 466, 471, 482,
-    489, 505, 530, 533, 537, 561, 597, 598, 599, 621, 637, 664, 691, 699, 701, 709, 710, 770, 789,
-    799, 806, 830, 876, 903, 908, 940, 944, 947, 948, 970, 972, 973, 975, 1005, 1010, 1031, 1077,
-    1078, 1103, 1129, 1152, 1185, 1194, 1197, 1211, 1212, 1244, 1262, 1265, 1333, 1341, 1370, 1371,
-    1419, 1471, 1523, 1530, 1545, 1556, 1558, 1561, 1604, 1606, 1629, 1643, 1648, 1655, 1667, 1683,
-    1695, 1698, 1725, 1731, 1733, 1745, 1759, 1761, 1773, 1795, 1796, 1862, 1863, 1864, 1867, 1921,
-    1928, 1932, 1942, 1991, 2012, 2022, 2029, 2069, 2085, 2086, 2092, 2093, 2101, 2108, 2114, 2129,
-    2164
-]
-
-# Format the list as a tuple in SQL
-format_strings = ','.join(['%s'] * len(target_ids))
-query = f"""
-    SELECT PlayerID, FirstName, LastName, BirthDate
-    FROM Player
-    WHERE PlayerID IN ({format_strings})
-    ORDER BY PlayerID ASC
-"""
-cursor.execute(query, tuple(target_ids))
+cursor.execute("SELECT PlayerID, FirstName, LastName, BirthDate FROM Player WHERE PlayerID >= 347 ORDER BY PlayerID ASC")
 players = cursor.fetchall()
 
 # --- Rate Limit Handling ---
@@ -108,7 +86,8 @@ for player in players:
     # This loop tries to construct the URL for the player's gamelog page.
     # It appends a two-digit suffix (00 to 04) to the slug_prefix and constructs the URL.
     # This is because the prefix is not always unique, so we need to try different combinations.
-    for i in range(10):
+    for i in range(5):
+        # --- Rate Limit Check Based on URL Fetches ---
         current_time = time.time()
         if url_counter >= URL_LIMIT:
             elapsed = current_time - last_reset_time
@@ -122,9 +101,14 @@ for player in players:
         suffix = f"{i:02d}"
         slug = f"{slug_prefix}{suffix}"
         url = f"https://www.pro-football-reference.com/players/{slug_letter}/{slug}/gamelog/2024/"
-        print(f"🔍 Trying slug: {slug} → {url}")
 
-        url_counter += 1  # ✅ Count all fetches regardless of success
+        # --- Fetch the page ---
+        # This part fetches the page using requests and BeautifulSoup.
+        # It sets a user-agent and accept-language header to mimic a real browser.
+        # It also handles exceptions if the page fails to load.
+        # If the page fails to load, it indicates that the URL is not valid or the player does not exist.
+        print(f"🔍 Trying slug: {slug} → {url}")
+        url_counter += 1  # ✅ Always count the request attempt
 
         try:
             response = requests.get(url, headers={
@@ -198,20 +182,20 @@ for player in players:
 
 
 
-    # --- Locate Stats Table ---
-    # We look for the stats table in the HTML.
-    # The table is usually embedded in a comment, so we need to search for it.
-    table = soup.find("table", {"id": "stats"})
+    # --- Locate Playoff Stats Table ---
+    # ✅ CHANGED: Specifically looks for the playoff stats table (`stats_playoffs`).
+    table = soup.find("table", {"id": "stats_playoffs"})
     if not table:
         for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
-            if 'id="stats"' in comment:
-                table = BeautifulSoup(comment, "html.parser").find("table", {"id": "stats"})
+            if 'id="stats_playoffs"' in comment:
+                table = BeautifulSoup(comment, "html.parser").find("table", {"id": "stats_playoffs"})
                 break
 
     if not table:
-        print("❌ Could not find 'stats' table.")
+        print("🚫 Playoff stats table ('stats_playoffs') not found for this player. Moving on...")
         continue
-    print("✅ Found 'stats' table.")
+
+    print("✅ Found 'stats_playoffs' table.")
 
 
 
@@ -374,5 +358,3 @@ if os.path.exists(LOG_FILE):
         print(log.read().strip())
 else:
     print("\n✅ No failed player matches logged.")
-    
-    
