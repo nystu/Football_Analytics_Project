@@ -29,7 +29,7 @@ LOG_FILE = "slug_failures.log"
 # --- Execute SQL Query ---
 # This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table.
 # The results are ordered by PlayerID in ascending order.
-cursor.execute("SELECT PlayerID, FirstName, LastName, BirthDate FROM Player WHERE PlayerID >= 347 ORDER BY PlayerID ASC")
+cursor.execute("SELECT PlayerID, FirstName, LastName, BirthDate FROM Player ORDER BY PlayerID ASC")
 players = cursor.fetchall()
 
 # --- Rate Limit Handling ---

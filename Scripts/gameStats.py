@@ -108,7 +108,7 @@ for player in players:
     # This loop tries to construct the URL for the player's gamelog page.
     # It appends a two-digit suffix (00 to 04) to the slug_prefix and constructs the URL.
     # This is because the prefix is not always unique, so we need to try different combinations.
-    for i in range(10):
+    for i in range(15):
         current_time = time.time()
         if url_counter >= URL_LIMIT:
             elapsed = current_time - last_reset_time

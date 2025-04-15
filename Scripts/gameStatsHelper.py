@@ -26,145 +26,48 @@ season_id = 2425
 LOG_FILE = "slug_failures.log"
 
 player_urls = {
-    35: "https://www.pro-football-reference.com/players/K/KooxYo00/gamelog/2024/",    # Name: Younghoe Koo
-    57: "https://www.pro-football-reference.com/players/S/SmitJa08/gamelog/2024/",    # Name: James Smith-Williams
-    91: "https://www.pro-football-reference.com/players/E/EpenAJ00/gamelog/2024/",   # Name: A.J. Epenesa
-    99: "https://www.pro-football-reference.com/players/J/JackKa99/gamelog/2024/",    # Name: Kareem Jackson
-    127: "https://www.pro-football-reference.com/players/T/TorrOC00/gamelog/2024/",  # Name: O'Cyrus Torrence
-    131: "https://www.pro-football-reference.com/players/V/VanDRy00/gamelog/2024/",   # Name: Ryan Van Demark
-    189: "https://www.pro-football-reference.com/players/P/PineEd00/gamelog/2024/"   # Name: Eddy Piñeiro
-    # 191:    # Name: LaBryan Ray
-    # 196:    # Name: A'Shawn Robinson
-    # 202:    # Name: T.J. Smith
-    # 216:    # Name: D.J. Wonnum
-    # 241:    # Name: T.J. Edwards
-    # 253:    # Name: Jaylon Johnson
-    # 254:    # Name: Roschon Johnson
-    # 255:    # Name: Braxton Jones
-    # 256:    # Name: Carl Jones
-    # 257:    # Name: Jaylon Jones
-    # 262:    # Name: D.J. Moore
-    # 276:    # Name: Terell Smith
-    # 286:    # Name: Chris Williams
-    # 289:    # Name: Erick All
-    # 295:    # Name: Chase Brown
-    # 298:    # Name: Jake Browning
-    # 305:    # Name: Jalen Davis
-    # 310:    # Name: Lawrence Guy
-    # 315:    # Name: B.J. Hill
-    # 327:    # Name: Charlie Jones
-    # 330:    # Name: Matt Lee
-    # 352:    # Name: Trayveon Williams
-    # 362:    # Name: Corey Bojorquez
-    # 363:    # Name: Jowon Briggs
-    # 399:    # Name: Dawand Jones
-    # 402:    # Name: T.Y. McGill
-    # 464:    # Name: Blake Gillikin
-    # 466:    # Name: Marvin Harrison Jr.
-    # 471:    # Name: Christian Jones
-    # 482:    # Name: Sean Murphy-Bunting
-    # 489:    # Name: Matt Prater
-    # 505:    # Name: Jonah Williams
-    # 530:    # Name: C.J. Goodwin
-    # 533:    # Name: Darius Harris
-    # 537:    # Name: Linval Joseph
-    # 561:    # Name: Mazi Smith
-    # 597:    # Name: Jordan Jackson
-    # 598:    # Name: Brandon Jones
-    # 599:    # Name: D.J. Jones
-    # 621:    # Name: Keidron Smith
-    # 637:    # Name: Javonte Williams
-    # 664:    # Name: Jamarco Jones
-    # 691:    # Name: D.J. Reader
-    # 699:    # Name: Chris Smith
-    # 701:    # Name: Amon-Ra St. Brown
-    # 709:    # Name: Jameson Williams
-    # 710:    # Name: Jonah Williams
-    # 770:    # Name: Malik Willis
-    # 789:    # Name: Tank Dell
-    # 799:    # Name: Christian Harris
-    # 806:    # Name: Jerry Hughes
-    # 830:    # Name: M.J. Stewart
-    # 876:    # Name: Jaylon Jones
-    # 903:    # Name: Braden Smith
-    # 908:    # Name: Rodney Thomas II
-    # 940:    # Name: Josh Hines-Allen
-    # 944:    # Name: Antonio Johnson
-    # 947:    # Name: Jarrian Jones
-    # 948:    # Name: Mac Jones
-    # 970:    # Name: Maason Smith
-    # 972:    # Name: Brian Thomas
-    # 973:    # Name: Daniel Thomas
-    # 975:    # Name: Cole Van Lanen
-    # 1005:   # Name: D.J. Humphries
-    # 1010:   # Name: Chris Jones
-    # 1031:   # Name: Trey Smith
-    # 1077:   # Name: Jack Jones
-    # 1078:   # Name: Kyu Blu Kelly
-    # 1103:   # Name: John Samuel Shenker
-    # 1129:   # Name: Bud Dupree
-    # 1152:   # Name: Jaylen Johnson
-    # 1185:   # Name: Kendall Williamson
-    # 1194:   # Name: Tyler Davis
-    # 1197:   # Name: Cobie Durant
-    # 1211:   # Name: Desjuan Johnson
-    # 1212:   # Name: John Johnson
-    # 1244:   # Name: Darious Williams
-    # 1262:   # Name: Calais Campbell
-    # 1265:   # Name: Robbie Chosen
-    # 1333:   # Name: Jamin Davis
-    # 1341:   # Name: C.J. Ham
-    # 1370:   # Name: Levi Drake Rodriguez
-    # 1371:   # Name: John Parker Romo
-    # 1419:   # Name: Marcus Jones
-    # 1471:   # Name: J.T. Gray
-    # 1523:   # Name: Jamaal Williams
-    # 1530:   # Name: Boogie Basham
-    # 1545:   # Name: Graham Gano
-    # 1556:   # Name: Anthony Johnson
-    # 1558:   # Name: Jakob Johnson
-    # 1561:   # Name: Daniel Jones
-    # 1604:   # Name: Dee Williams
-    # 1606:   # Name: Braelon Allen
-    # 1629:   # Name: Jermaine Johnson II
-    # 1643:   # Name: C.J. Mosley
-    # 1648:   # Name: D.J. Reed
-    # 1655:   # Name: Brandon Smith
-    # 1667:   # Name: Mike Williams
-    # 1683:   # Name: Jalen Carter
-    # 1695:   # Name: C.J. Gardner-Johnson
-    # 1698:   # Name: Brandon Graham
-    # 1725:   # Name: DeVonta Smith
-    # 1731:   # Name: C.J. Uzomah
-    # 1733:   # Name: Milton Williams
-    # 1745:   # Name: Jalen Elliott
-    # 1759:   # Name: Brandon Johnson
-    # 1761:   # Name: Broderick Jones
-    # 1773:   # Name: Dan Moore
-    # 1795:   # Name: T.J. Watt
-    # 1796:   # Name: Rodney Williams
-    # 1862:   # Name: DaShaun White
-    # 1863:   # Name: Trent Williams
-    # 1864:   # Name: Brayden Willis
-    # 1867:   # Name: Rock Ya-Sin
-    # 1921:   # Name: Jaxon Smith-Njigba
-    # 1928:   # Name: Cody White
-    # 1932:   # Name: Riq Woolen
-    # 1942:   # Name: Jack Browning
-    # 1991:   # Name: Tykee Smith
-    # 2012:   # Name: Jarvis Brownlee
-    # 2022:   # Name: Nick Folk
-    # 2029:   # Name: Jaylen Harrell
-    # 2069:   # Name: James Williams
-    # 2085:   # Name: Malik Harrison
-    # 2086:   # Name: Deonte Harty
-    # 2092:   # Name: Josh Johnson
-    # 2093:   # Name: Josh Jones
-    # 2101:   # Name: Nnamdi Madubuike
-    # 2108:   # Name: Odafe Oweh
-    # 2114:   # Name: Roquan Smith
-    # 2129:   # Name: Marcus Williams
-    # 2164:   # Name: Quan Martin
+    99:   "https://www.pro-football-reference.com/players/J/JackKa99/gamelog/2024/",  # Kareem Jackson
+    127:  "https://www.pro-football-reference.com/players/T/TorrOC00/gamelog/2024/",  # O'Cyrus Torrence
+    131:  "https://www.pro-football-reference.com/players/V/VanDRy00/gamelog/2024/",  # Ryan Van Demark
+    189:  "https://www.pro-football-reference.com/players/P/PineEd00/gamelog/2024/",  # Eddy Piñeiro
+    262:  "https://www.pro-football-reference.com/players/M/MoorD.00/gamelog/2024/",  # D.J. Moore
+    315:  "https://www.pro-football-reference.com/players/H/HillB.00/gamelog/2024/",  # B.J. Hill
+    402:  "https://www.pro-football-reference.com/players/M/McGiT.00/gamelog/2024/",  # T.Y. McGill
+    482:  "https://www.pro-football-reference.com/players/B/BuntSe00/gamelog/2024/",  # Sean Murphy-Bunting
+    489:  "https://www.pro-football-reference.com/players/P/PratMa20/gamelog/2024/",  # Matt Prater
+    530:  "https://www.pro-football-reference.com/players/G/GoodC.00/gamelog/2024/",  # C.J. Goodwin
+    537:  "https://www.pro-football-reference.com/players/J/JoseLi99/gamelog/2024/",  # Linval Joseph
+    599:  "https://www.pro-football-reference.com/players/J/JoneD.01/gamelog/2024/",  # D.J. Jones
+    691:  "https://www.pro-football-reference.com/players/R/ReadD.00/gamelog/2024/",  # D.J. Reader
+    701:  "https://www.pro-football-reference.com/players/S/StxxAm00/gamelog/2024/",  # Amon-Ra St. Brown
+    710:  "https://www.pro-football-reference.com/players/W/WillJo16/gamelog/2024/",  # Jonah Williams
+    789:  "https://www.pro-football-reference.com/players/D/DellNa00/gamelog/2024/",  # Tank Dell
+    806:  "https://www.pro-football-reference.com/players/H/HughJe99/gamelog/2024/",  # Jerry Hughes
+    830:  "https://www.pro-football-reference.com/players/S/StewM.00/gamelog/2024/",  # M.J. Stewart
+    940:  "https://www.pro-football-reference.com/players/A/AlleJo03/gamelog/2024/",  # Josh Hines-Allen
+    975:  "https://www.pro-football-reference.com/players/V/VanxCo00/gamelog/2024/",  # Cole Van Lanen
+    1005: "https://www.pro-football-reference.com/players/H/HumpD.00/gamelog/2024/",  # D.J. Humphries
+    1078: "https://www.pro-football-reference.com/players/B/BluxKy00/gamelog/2024/",  # Kyu Blu Kelly
+    1129: "https://www.pro-football-reference.com/players/D/DuprAl00/gamelog/2024/",  # Bud Dupree
+    1197: "https://www.pro-football-reference.com/players/D/DuraDe01/gamelog/2024/",  # Cobie Durant
+    1262: "https://www.pro-football-reference.com/players/C/CampCa99/gamelog/2024/",  # Calais Campbell
+    1265: "https://www.pro-football-reference.com/players/A/AndeRo04/gamelog/2024/",  # Robbie Chosen
+    1341: "https://www.pro-football-reference.com/players/H/HamxC.00/gamelog/2024/",  # C.J. Ham
+    1370: "https://www.pro-football-reference.com/players/R/RodrLe00/gamelog/2024/",  # Levi Drake Rodriguez
+    1371: "https://www.pro-football-reference.com/players/R/RomoJo00/gamelog/2024/",  # John Parker Romo
+    1471: "https://www.pro-football-reference.com/players/G/GrayJ.00/gamelog/2024/",  # J.T. Gray
+    1530: "https://www.pro-football-reference.com/players/B/BashCa00/gamelog/2024/",  # Boogie Basham
+    1545: "https://www.pro-football-reference.com/players/G/GanoGr44/gamelog/2024/",  # Graham Gano
+    1643: "https://www.pro-football-reference.com/players/M/MoslC.00/gamelog/2024/",  # C.J. Mosley
+    1648: "https://www.pro-football-reference.com/players/R/ReedD.00/gamelog/2024/",  # D.J. Reed
+    1695: "https://www.pro-football-reference.com/players/G/GardCh00/gamelog/2024/",  # C.J. Gardner-Johnson
+    1698: "https://www.pro-football-reference.com/players/G/GrahBr99/gamelog/2024/",  # Brandon Graham
+    1731: "https://www.pro-football-reference.com/players/U/UzomC.00/gamelog/2024/",  # C.J. Uzomah
+    1759: "https://www.pro-football-reference.com/players/J/JohnBr23/gamelog/2024/",  # Brandon Johnson
+    1795: "https://www.pro-football-reference.com/players/W/WattT.00/gamelog/2024/",  # T.J. Watt
+    1863: "https://www.pro-football-reference.com/players/W/WillTr21/gamelog/2024/",  # Trent Williams
+    1867: "https://www.pro-football-reference.com/players/Y/Ya-SRo00/gamelog/2024/",  # Rock Ya-Sin
+    1932: "https://www.pro-football-reference.com/players/W/WoolTa00/gamelog/2024/",  # Riq Woolen
 }
 
 # --- Execute SQL Query ---
@@ -360,3 +263,8 @@ if os.path.exists(LOG_FILE):
         print(log.read().strip())
 else:
     print("\n✅ No failed player matches logged.")
+    
+    
+# Remove these Players from database
+# LaBryan Ray
+# John Samuel Shenker
