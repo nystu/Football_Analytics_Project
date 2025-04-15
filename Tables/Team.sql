@@ -12,4 +12,3 @@ CREATE TABLE Team (
     Abbreviation CHAR(3) NOT NULL UNIQUE -- Standard 3-letter team abbreviation (e.g., 'GB')
 );
 
--- NEED TO UPDATE DIVISION TO JUST INCLUDE 'NORTH' NOT 'NFC NORTH'
