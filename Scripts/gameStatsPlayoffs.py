@@ -35,7 +35,7 @@ players = cursor.fetchall()
 # --- Rate Limit Handling ---
 # To avoid rate limits, we fetch only 20 pages (URLs) per minute.
 # After 20 fetches, the script pauses for 60 seconds before continuing.
-URL_LIMIT = 15
+URL_LIMIT = 18
 URL_RESET_INTERVAL = 60  # seconds
 url_counter = 0
 last_reset_time = time.time()
@@ -86,7 +86,7 @@ for player in players:
     # This loop tries to construct the URL for the player's gamelog page.
     # It appends a two-digit suffix (00 to 04) to the slug_prefix and constructs the URL.
     # This is because the prefix is not always unique, so we need to try different combinations.
-    for i in range(5):
+    for i in range(8):
         # --- Rate Limit Check Based on URL Fetches ---
         current_time = time.time()
         if url_counter >= URL_LIMIT:

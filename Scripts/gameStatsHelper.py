@@ -68,6 +68,12 @@ player_urls = {
     1863: "https://www.pro-football-reference.com/players/W/WillTr21/gamelog/2024/",  # Trent Williams
     1867: "https://www.pro-football-reference.com/players/Y/Ya-SRo00/gamelog/2024/",  # Rock Ya-Sin
     1932: "https://www.pro-football-reference.com/players/W/WoolTa00/gamelog/2024/",  # Riq Woolen
+    2022: "https://www.pro-football-reference.com/players/F/FolkNi20/gamelog/2024/",  # Nick Folk
+    2069: "https://www.pro-football-reference.com/players/W/WillJa15/gamelog/2024/",  # James Williams
+    2086: "https://www.pro-football-reference.com/players/H/HarrDe07/gamelog/2024/",  # Deonte Harty
+    2101: "https://www.pro-football-reference.com/players/M/MaduJu00/gamelog/2024/",  # Nnamdi Madubuike
+    2108: "https://www.pro-football-reference.com/players/O/OwehJa00/gamelog/2024/",  # Odafe Oweh
+    2164: "https://www.pro-football-reference.com/players/M/MartJa04/gamelog/2024/",  # Quan Martin
 }
 
 # --- Execute SQL Query ---
@@ -120,6 +126,8 @@ for player in players:
         url_counter = 0
         last_reset_time = time.time()
 
+    url_counter += 1
+            
     # --- Fetch the page ---
     try:
         response = requests.get(url, headers={
@@ -127,26 +135,25 @@ for player in players:
             'Accept-Language': 'en-US,en;q=0.9'
         }, timeout=10)
         response.raise_for_status()
-        url_counter += 1
     except Exception as e:
         print(f"⚠️ Failed to load gamelog: {e}")
         continue
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # --- Locate Playoff Stats Table ---
-    # We're looking for the 'stats_playoffs' table instead of the regular season 'stats' table.
-    table = soup.find("table", {"id": "stats_playoffs"})
+    # --- Locate Regular Season Stats Table ---
+    # We're looking for the 'stats' table (regular season), not 'stats_playoffs'
+    table = soup.find("table", {"id": "stats"})
     if not table:
         for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
-            if 'id="stats_playoffs"' in comment:
-                table = BeautifulSoup(comment, "html.parser").find("table", {"id": "stats_playoffs"})
+            if 'id="stats"' in comment:
+                table = BeautifulSoup(comment, "html.parser").find("table", {"id": "stats"})
                 break
 
     if not table:
-        print("❌ No playoff stats table found. Skipping player.")
+        print("❌ No regular season stats table found. Skipping player.")
         continue
-    print("✅ Found 'stats_playoffs' table.")
+    print("✅ Found 'stats' table.")
 
     # --- Stats Mapping ---
     STAT_KEYS = {
