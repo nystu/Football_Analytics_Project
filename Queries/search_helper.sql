@@ -16,20 +16,20 @@ SELECT
     T.TeamName,
     MIN(G.GameDate) AS FirstGameDate,
     MAX(G.GameDate) AS LastGameDate
-FROM GameStats GS
-JOIN Game G ON GS.GameID = G.GameID
-JOIN Player P ON GS.PlayerID = P.PlayerID
-JOIN Team T ON GS.TeamID = T.TeamID
-WHERE G.SeasonID = 2425
-GROUP BY GS.PlayerID, GS.TeamID
-HAVING COUNT(DISTINCT GS.TeamID) >= 1
-AND GS.PlayerID IN (
-    SELECT GS2.PlayerID
-    FROM GameStats GS2
-    GROUP BY GS2.PlayerID
-    HAVING COUNT(DISTINCT GS2.TeamID) > 1
-)
-ORDER BY P.PlayerID, FirstGameDate;
+	FROM GameStats GS
+		JOIN Game G ON GS.GameID = G.GameID
+			JOIN Player P ON GS.PlayerID = P.PlayerID
+				JOIN Team T ON GS.TeamID = T.TeamID
+	WHERE G.SeasonID = 2425
+	GROUP BY GS.PlayerID, GS.TeamID
+	HAVING COUNT(DISTINCT GS.TeamID) >= 1
+		AND GS.PlayerID IN (
+			SELECT GS2.PlayerID
+			FROM GameStats GS2
+			GROUP BY GS2.PlayerID
+			HAVING COUNT(DISTINCT GS2.TeamID) > 1
+		)
+	ORDER BY P.PlayerID, FirstGameDate;
 
     
     
