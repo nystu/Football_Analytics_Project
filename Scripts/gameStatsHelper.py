@@ -4,7 +4,6 @@ from datetime import datetime
 import mysql.connector
 import time
 import os
-import re
 
 # --- MySQL Connect ---
 # ===================== 
@@ -35,16 +34,78 @@ LOG_FILE = "slug_failures.log"
 
 
 
-# --- Execute SQL Query For All Players ---
-# =========================================
-# This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table.
-# The results are ordered by PlayerID in ascending order.
-cursor.execute("""
-               SELECT PlayerID, FirstName, LastName, BirthDate 
-                    FROM Player 
-                    ORDER BY PlayerID ASC
-                """)
+# --- Player URLs ---
+# ===================
+# These are outliers that we need to fetch manually from the Pro Football Reference website.
+# The format for these do not follow the standard URL pattern from gameStats.py
+player_urls = {
+    99:   "https://www.pro-football-reference.com/players/J/JackKa99/gamelog/2024/",  # Kareem Jackson
+    127:  "https://www.pro-football-reference.com/players/T/TorrOC00/gamelog/2024/",  # O'Cyrus Torrence
+    131:  "https://www.pro-football-reference.com/players/V/VanDRy00/gamelog/2024/",  # Ryan Van Demark
+    171:  "https://www.pro-football-reference.com/players/J/JansJ.00/gamelog/2024/",  # J.J Jansen
+    189:  "https://www.pro-football-reference.com/players/P/PineEd00/gamelog/2024/",  # Eddy Piñeiro
+    262:  "https://www.pro-football-reference.com/players/M/MoorD.00/gamelog/2024/",  # D.J. Moore
+    315:  "https://www.pro-football-reference.com/players/H/HillB.00/gamelog/2024/",  # B.J. Hill
+    402:  "https://www.pro-football-reference.com/players/M/McGiT.00/gamelog/2024/",  # T.Y. McGill
+    482:  "https://www.pro-football-reference.com/players/B/BuntSe00/gamelog/2024/",  # Sean Murphy-Bunting
+    489:  "https://www.pro-football-reference.com/players/P/PratMa20/gamelog/2024/",  # Matt Prater
+    530:  "https://www.pro-football-reference.com/players/G/GoodC.00/gamelog/2024/",  # C.J. Goodwin
+    537:  "https://www.pro-football-reference.com/players/J/JoseLi99/gamelog/2024/",  # Linval Joseph
+    599:  "https://www.pro-football-reference.com/players/J/JoneD.01/gamelog/2024/",  # D.J. Jones
+    691:  "https://www.pro-football-reference.com/players/R/ReadD.00/gamelog/2024/",  # D.J. Reader
+    701:  "https://www.pro-football-reference.com/players/S/StxxAm00/gamelog/2024/",  # Amon-Ra St. Brown
+    710:  "https://www.pro-football-reference.com/players/W/WillJo16/gamelog/2024/",  # Jonah Williams
+    789:  "https://www.pro-football-reference.com/players/D/DellNa00/gamelog/2024/",  # Tank Dell
+    806:  "https://www.pro-football-reference.com/players/H/HughJe99/gamelog/2024/",  # Jerry Hughes
+    830:  "https://www.pro-football-reference.com/players/S/StewM.00/gamelog/2024/",  # M.J. Stewart
+    940:  "https://www.pro-football-reference.com/players/A/AlleJo03/gamelog/2024/",  # Josh Hines-Allen
+    975:  "https://www.pro-football-reference.com/players/V/VanxCo00/gamelog/2024/",  # Cole Van Lanen
+    1005: "https://www.pro-football-reference.com/players/H/HumpD.00/gamelog/2024/",  # D.J. Humphries
+    1078: "https://www.pro-football-reference.com/players/B/BluxKy00/gamelog/2024/",  # Kyu Blu Kelly
+    1129: "https://www.pro-football-reference.com/players/D/DuprAl00/gamelog/2024/",  # Bud Dupree
+    1197: "https://www.pro-football-reference.com/players/D/DuraDe01/gamelog/2024/",  # Cobie Durant
+    1262: "https://www.pro-football-reference.com/players/C/CampCa99/gamelog/2024/",  # Calais Campbell
+    1265: "https://www.pro-football-reference.com/players/A/AndeRo04/gamelog/2024/",  # Robbie Chosen
+    1341: "https://www.pro-football-reference.com/players/H/HamxC.00/gamelog/2024/",  # C.J. Ham
+    1370: "https://www.pro-football-reference.com/players/R/RodrLe00/gamelog/2024/",  # Levi Drake Rodriguez
+    1371: "https://www.pro-football-reference.com/players/R/RomoJo00/gamelog/2024/",  # John Parker Romo
+    1471: "https://www.pro-football-reference.com/players/G/GrayJ.00/gamelog/2024/",  # J.T. Gray
+    1530: "https://www.pro-football-reference.com/players/B/BashCa00/gamelog/2024/",  # Boogie Basham
+    1545: "https://www.pro-football-reference.com/players/G/GanoGr44/gamelog/2024/",  # Graham Gano
+    1643: "https://www.pro-football-reference.com/players/M/MoslC.00/gamelog/2024/",  # C.J. Mosley
+    1648: "https://www.pro-football-reference.com/players/R/ReedD.00/gamelog/2024/",  # D.J. Reed
+    1695: "https://www.pro-football-reference.com/players/G/GardCh00/gamelog/2024/",  # C.J. Gardner-Johnson
+    1698: "https://www.pro-football-reference.com/players/G/GrahBr99/gamelog/2024/",  # Brandon Graham
+    1731: "https://www.pro-football-reference.com/players/U/UzomC.00/gamelog/2024/",  # C.J. Uzomah
+    1759: "https://www.pro-football-reference.com/players/J/JohnBr23/gamelog/2024/",  # Brandon Johnson
+    1795: "https://www.pro-football-reference.com/players/W/WattT.00/gamelog/2024/",  # T.J. Watt
+    1863: "https://www.pro-football-reference.com/players/W/WillTr21/gamelog/2024/",  # Trent Williams
+    1867: "https://www.pro-football-reference.com/players/Y/Ya-SRo00/gamelog/2024/",  # Rock Ya-Sin
+    1932: "https://www.pro-football-reference.com/players/W/WoolTa00/gamelog/2024/",  # Riq Woolen
+    2022: "https://www.pro-football-reference.com/players/F/FolkNi20/gamelog/2024/",  # Nick Folk
+    2069: "https://www.pro-football-reference.com/players/W/WillJa15/gamelog/2024/",  # James Williams
+    2086: "https://www.pro-football-reference.com/players/H/HarrDe07/gamelog/2024/",  # Deonte Harty
+    2101: "https://www.pro-football-reference.com/players/M/MaduJu00/gamelog/2024/",  # Nnamdi Madubuike
+    2108: "https://www.pro-football-reference.com/players/O/OwehJa00/gamelog/2024/",  # Odafe Oweh
+    2164: "https://www.pro-football-reference.com/players/M/MartJa04/gamelog/2024/",  # Quan Martin
+}
+
+
+# --- Find PlayerIDs ---
+# =====================+
+# We already know the players we want to fetch (from the player_urls dictionary).
+# So we construct a query to select only those PlayerIDs from the Player table.
+player_ids = list(player_urls.keys())  # Get all PlayerIDs from the dictionary
+format_strings = ','.join(['%s'] * len(player_ids))  # SQL formatting placeholders
+query = f"""
+    SELECT PlayerID, FirstName, LastName, BirthDate
+        FROM Player
+        WHERE PlayerID IN ({format_strings})
+        ORDER BY PlayerID ASC
+"""
+cursor.execute(query, tuple(player_ids))
 players = cursor.fetchall()
+
 
 
 # --- Rate Limit Handling ---
@@ -52,35 +113,10 @@ players = cursor.fetchall()
 # To avoid rate limits, we fetch only 18 pages (URLs) per minute.
 # After 20 fetches, the script pauses for 60 seconds before continuing.
 # Initialize the URL counter and last reset time.
-URL_LIMIT = 18
+URL_LIMIT = 15
 URL_RESET_INTERVAL = 60  # seconds
 url_counter = 0
 last_reset_time = time.time()
-
-
-
-# --- Helper: Normalize Names for Slug Construction ---
-# =====================================================
-# Handles edge cases in names like apostrophes, periods, compound names, and short last names.
-def normalize_slug_prefix(last_name, first_name):
-    import re
-
-    # Remove non-alphabetic characters from each name part
-    ln = re.sub(r"[^a-zA-Z]", "", last_name)
-    fn = re.sub(r"[^a-zA-Z]", "", first_name)
-
-    # Handle compound last names like "Van Demark"
-    if " " in last_name:
-        parts = last_name.split(" ")
-        if len(parts) > 1:
-            ln = parts[0].capitalize() + parts[1][0:2].capitalize()
-    elif "'" in last_name or "." in last_name:
-        ln = re.sub(r"[^a-zA-Z]", "", last_name)
-
-    # Pad short last names with 'x' if fewer than 4 characters
-    # Combine and format
-    ln_padded = ln[:4].ljust(4, 'x')
-    return (ln_padded + fn[:2]).title()
 
 
 
@@ -96,122 +132,51 @@ for player in players:
     print(f"\n🎯 Looking for: {expected_name} (Born {expected_birth})")
 
 
-    # --- Construct Slug (URL) ---
-    # The slug_letter is the first letter of the last name, converted to uppercase.
-    # The slug_prefix is constructed by taking the first four letters of the last name
-    # and the first two letters of the first name, and converting them to title case.
-    # Found is initialized to False, indicating that we haven't found the player yet.
-    slug_letter = last_name[0].upper()
-    slug_prefix = normalize_slug_prefix(last_name, first_name)
-    found = False
+    # --- Skip players not in URL map ---
+    # Should not happen, but just in case.
+    if player_id not in player_urls:
+        print(f"⏭️ Skipping PlayerID {player_id} — no URL provided.")
+        continue
+    
+    
+    # Sets the URL to the value from the player_urls dictionary (Key)
+    # debug statement to show the URL being used
+    url = player_urls[player_id]
+    print(f"🔗 Using direct URL for PlayerID {player_id}: {url}")
 
 
-    # --- Try Slugs ---
-    # This loop tries to construct the URL for the player's gamelog page.
-    # This is because the prefix is not always unique, so we need to try different combinations.
+    # --- Rate Limit Check ---
     # contunues to update current_time and check if the URL limit has been reached.
     # If the URL limit is reached, it sleeps for the remaining time before continuing.
-    for i in range(8):
-        current_time = time.time()
-        if url_counter >= URL_LIMIT:
-            elapsed = current_time - last_reset_time
-            if elapsed < URL_RESET_INTERVAL:
-                wait_time = URL_RESET_INTERVAL - elapsed
-                print(f"⏳ URL limit reached. Sleeping for {int(wait_time)} seconds...")
-                time.sleep(wait_time)
-            url_counter = 0 # reset the counter after sleeping
-            last_reset_time = time.time() # update the last reset time
-        
-        
-        # --- Construct the slug and URL ---
-        # The slug is constructed by taking the slug_prefix and appending a two-digit suffix.
-        # From this it creates the URL for the player's gamelog page.
-        # Increasing the URL Counter each time to make sure we don't exceed the limit.
-        suffix = f"{i:02d}"
-        slug = f"{slug_prefix}{suffix}"
-        url = f"https://www.pro-football-reference.com/players/{slug_letter}/{slug}/gamelog/2024/"
-        print(f"🔍 Trying slug: {slug} → {url}")
-        url_counter += 1  # ✅ Count all fetches regardless of success
+    current_time = time.time()
+    if url_counter >= URL_LIMIT:
+        elapsed = current_time - last_reset_time
+        if elapsed < URL_RESET_INTERVAL:
+            wait_time = URL_RESET_INTERVAL - elapsed
+            print(f"⏳ URL limit reached. Sleeping for {int(wait_time)} seconds...")
+            time.sleep(wait_time)
+        url_counter = 0
+        last_reset_time = time.time()
 
-
-        # --- Try to load the page ---
-        # We use the requests library to fetch the page.
-        # If the page loads successfully, we parse it using BeautifulSoup.
-        # If it fails, we catch the exception and print a message, then continue to the next slug.
-        # (Breaking the loop for this slug if it fails)
-        try:
-            response = requests.get(url, headers={
-                'User-Agent': 'Mozilla/5.0',
-                'Accept-Language': 'en-US,en;q=0.9'
-            }, timeout=10)
-            response.raise_for_status()
-        except Exception as e:
-            print(f"⚠️ Failed to load gamelog: {e}")
-            continue
-
-
-        # --- Check Page and Player Match ---
-        # If the page loads successfully, we parse it using BeautifulSoup.
-        # But first we need to identify if it the player that we are looking for.
-        # We look for the player's name and birthdate in the HTML.
-        soup = BeautifulSoup(response.text, "html.parser")
-        name_tag = soup.select_one("h1 span")
-        birth_tag = soup.select_one("#necro-birth[data-birth]")
-
-        if not birth_tag:
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment_soup = BeautifulSoup(comment, "html.parser")
-                birth_tag = comment_soup.select_one("#necro-birth[data-birth]")
-                if birth_tag:
-                    break
-
-        if not name_tag or not birth_tag:
-            print("❌ Name or birthdate not found.")
-            continue
-
-
-        # --- Extract Name and Birthdate ---
-        # Extract the player's name and birthdate from the HTML.
-        # The name is extracted from the <h1> tag and the birthdate from the <span> tag with id "necro-birth".
-        page_name = name_tag.text.strip().lower()
-        page_birth = birth_tag.get("data-birth", "").strip()
-
-
-        # --- Check for match ---
-        # We check if the extracted name and birthdate match the expected values.
-        # If they match, we set found to True and break out of the inner loop.
-        # Then we proceed to locate the stats table.
-        # If they do not match, we print a message indicating the mismatch.
-        if page_name == expected_name and page_birth == expected_birth:
-            print(f"✅ Match found: {page_name.title()} ({page_birth})")
-            found = True
-            break
-        else:
-            print(f"❌ Mismatch: Got {page_name.title()} ({page_birth})")
-            time.sleep(1)
-
-
-
-    # --- Log Failure ---
-    # ===================
-    # If found is still False after trying all slugs, we log the failure.
-    # We create a log line with the player's ID, name, birthdate, and the slugs that were tried.
-    # We also write this log line to the log file.
-    # At the end, we print a message indicating that the player was not found.
-    if not found:
-        print("🚫 Could not find matching player.")
-        failed_slugs = [f"{slug_prefix}{i:02d}" for i in range(5)]
-        log_line = (
-            f"{datetime.now().isoformat()} | PlayerID: {player_id} | Name: {first_name} {last_name} "
-            f"(Born {birth_date}) | Tried slugs: {', '.join(failed_slugs)}\n"
-        )
-        try:
-            with open(LOG_FILE, "a") as log:
-                log.write(log_line)
-            print(f"📝 Logged failed attempt to {LOG_FILE}")
-        except Exception as log_err:
-            print(f"⚠️ Could not write to log file: {log_err}")
+    url_counter += 1
+            
+    
+    # --- Try to load the page ---
+    # We use the requests library to fetch the page.
+    # If the page loads successfully, we parse it using BeautifulSoup.
+    # If it fails, we catch the exception and print a message, then continue to the next slug.
+    # (Breaking the loop for this slug if it fails)
+    # If the page loads successfully, we parse it using BeautifulSoup.
+    try:
+        response = requests.get(url, headers={
+            'User-Agent': 'Mozilla/5.0',
+            'Accept-Language': 'en-US,en;q=0.9'
+        }, timeout=10)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"⚠️ Failed to load gamelog: {e}")
         continue
+    soup = BeautifulSoup(response.text, "html.parser")
 
 
 # --- Player Found Scrape the Stats ---
@@ -435,15 +400,18 @@ for table_id in ["stats", "stats_playoffs"]:
         # Or which rows are being skipped since the player was inactive or did not play (Above)
         print(f"✅ Inserted {label} stats for {game_date} (Team: {team_abbr})")
 
-
-
-
-# --- Close Cursor and Connection ---
-# ===================================
+# --- Done ---
 # After processing all players, we close the database connection.
 # We commit the changes to the database and close the cursor and connection.
 cursor.close()
 conn.close()
 print("\n🧹 Done with players.")
 
+# --- Print Log File Contents (Optional Summary) ---
+if os.path.exists(LOG_FILE):
+    print(f"\n📄 Contents of {LOG_FILE}:")
+    with open(LOG_FILE, "r") as log:
+        print(log.read().strip())
+else:
+    print("\n✅ No failed player matches logged.")
     
