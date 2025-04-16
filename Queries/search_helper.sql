@@ -1,73 +1,66 @@
-SELECT *	
-	FROM Team;
-
-SELECT *
-	FROM GameStats;
-
-SELECT *
-	FROM Game G
-		LEFT JOIN GameStats GS ON G.GameID = GS.GameID
-	WHERE GS.GameID IS NULL;
-
+-- Finds Offensive Stats for QB's
+-- Calculates there totals for the whole season (including playoffs)
+-- Computes there completion percentage and rounds 2 places
+-- If PassingAttemps is zero then it is marked as null
 SELECT 
-    P.PlayerID,
-    P.FirstName,
-    P.LastName,
-    T.TeamName,
-    MIN(G.GameDate) AS FirstGameDate,
-    MAX(G.GameDate) AS LastGameDate
-	FROM GameStats GS
-		JOIN Game G ON GS.GameID = G.GameID
-			JOIN Player P ON GS.PlayerID = P.PlayerID
-				JOIN Team T ON GS.TeamID = T.TeamID
-	WHERE G.SeasonID = 2425
-	GROUP BY GS.PlayerID, GS.TeamID
-	HAVING COUNT(DISTINCT GS.TeamID) >= 1
-		AND GS.PlayerID IN (
-			SELECT GS2.PlayerID
-			FROM GameStats GS2
-			GROUP BY GS2.PlayerID
-			HAVING COUNT(DISTINCT GS2.TeamID) > 1
-		)
-	ORDER BY P.PlayerID, FirstGameDate;
+    Player.FirstName,
+    Player.LastName,
+    Team.Location,
+    SUM(GameStats.PassingAttempts) AS PassingAttempts,
+    SUM(GameStats.PassingCompletions) AS PassingCompletions,
+    SUM(GameStats.PassingYards) AS PassingYards,
+	ROUND((SUM(GameStats.PassingCompletions) / NULLIF(SUM(GameStats.PassingAttempts), 0)) * 100, 2) AS CompletionPercentage
+	FROM GameStats
+		JOIN Player ON GameStats.PlayerID = Player.PlayerID
+			JOIN Team ON GameStats.TeamID = Team.TeamID
+	WHERE Player.Position = 'QB'
+	GROUP BY Player.PlayerID, Team.TeamID
+	ORDER BY PassingYards DESC, Player.LastName, Player.FirstName;
 
+
+-- Need to Look at D.J. Moore and Amon-Ra St. Brown GameStats
+SELECT 
+    Player.FirstName,
+    Player.LastName,
+    MIN(Team.Location),
+    SUM(GameStats.ReceivingYards),
+    SUM(GameStats.Receptions),
+    ROUND(SUM(GameStats.ReceivingYards) / NULLIF(SUM(GameStats.Receptions), 0), 2)
+	FROM GameStats
+		JOIN Player ON GameStats.PlayerID = Player.PlayerID
+			JOIN Team ON GameStats.TeamID = Team.TeamID
+	WHERE Player.Position = 'WR'
+	GROUP BY Player.PlayerID
+	ORDER BY SUM(GameStats.ReceivingYards) DESC, Player.LastName, Player.FirstName;
+
+
+-- Top 10 most productive WRs by receiving yards per reception
+-- They Need to HAVE a minumum of 100 Receptions
+-- Sum up all stats for this player while they were on this specific team.
+SELECT 
+    Player.FirstName,
+    Player.LastName,
+    Team.Location,
+    SUM(GameStats.ReceivingYards) AS Yards,
+    SUM(GameStats.Receptions) AS Receptions,
+    ROUND(SUM(GameStats.ReceivingYards) / NULLIF(SUM(GameStats.Receptions), 0), 2) AS YardsPerReception
+	FROM GameStats
+		JOIN Player ON GameStats.PlayerID = Player.PlayerID
+			JOIN Team ON GameStats.TeamID = Team.TeamID
+	WHERE Player.Position = 'WR'
+	GROUP BY Player.PlayerID, Team.TeamID
+	HAVING Receptions >= 100
+	ORDER BY YardsPerReception DESC
+	LIMIT 10;
     
-    
-     
--- DELETE FROM GameStats WHERE GameStatID >=0;
--- ALTER TABLE GameStats AUTO_INCREMENT = 1;
+SELECT *
+	FROM GameStats
+	WHERE PlayerID = 701;
+        
+	
+SELECT *
+	FROM Player;
 
 
 
--- '1','Cardinals','Arizona','West','NFC','ARI'
--- '2','Falcons','Atlanta','South','NFC','ATL'
--- '3','Ravens','Baltimore','North','AFC','BAL'
--- '4','Bills','Buffalo','East','AFC','BUF'
--- '5','Panthers','Carolina','South','NFC','CAR'
--- '6','Bears','Chicago','North','NFC','CHI'
--- '7','Bengals','Cincinnati','North','AFC','CIN'
--- '8','Browns','Cleveland','North','AFC','CLE'
--- '9','Cowboys','Dallas','East','NFC','DAL'
--- '10','Broncos','Denver','West','AFC','DEN'
--- '11','Lions','Detroit','North','NFC','DET'
--- '12','Packers','Green Bay','North','NFC','GNB'
--- '13','Texans','Houston','South','AFC','HOU'
--- '14','Colts','Indianapolis','South','AFC','IND'
--- '15','Jaguars','Jacksonville','South','AFC','JAX'
--- '16','Chiefs','Kansas City','West','AFC','KAN'
--- '17','Raiders','Las Vegas','West','AFC','LVR'
--- '18','Chargers','Los Angeles','West','AFC','LAC'
--- '19','Rams','Los Angeles','West','NFC','LAR'
--- '20','Dolphins','Miami','East','AFC','MIA'
--- '21','Vikings','Minnesota','North','NFC','MIN'
--- '22','Patriots','New England','East','AFC','NWE'
--- '23','Saints','New Orleans','South','NFC','NOR'
--- '24','Giants','New York','East','NFC','NYG'
--- '25','Jets','New York','East','AFC','NYJ'
--- '26','Eagles','Philadelphia','East','NFC','PHI'
--- '27','Steelers','Pittsburgh','North','AFC','PIT'
--- '28','49ers','San Francisco','West','NFC','SFO'
--- '29','Seahawks','Seattle','West','NFC','SEA'
--- '30','Buccaneers','Tampa Bay','South','NFC','TAM'
--- '31','Titans','Tennessee','South','AFC','TEN'
--- '32','Commanders','Washington','East','NFC','WAS'
+
