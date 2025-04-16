@@ -29,6 +29,7 @@ player_urls = {
     99:   "https://www.pro-football-reference.com/players/J/JackKa99/gamelog/2024/",  # Kareem Jackson
     127:  "https://www.pro-football-reference.com/players/T/TorrOC00/gamelog/2024/",  # O'Cyrus Torrence
     131:  "https://www.pro-football-reference.com/players/V/VanDRy00/gamelog/2024/",  # Ryan Van Demark
+    171:  "https://www.pro-football-reference.com/players/J/JansJ.00/gamelog/2024/",  # J.J Jansen
     189:  "https://www.pro-football-reference.com/players/P/PineEd00/gamelog/2024/",  # Eddy Piñeiro
     262:  "https://www.pro-football-reference.com/players/M/MoorD.00/gamelog/2024/",  # D.J. Moore
     315:  "https://www.pro-football-reference.com/players/H/HillB.00/gamelog/2024/",  # B.J. Hill
@@ -143,7 +144,7 @@ for player in players:
 
     # --- Locate Regular Season Stats Table ---
     # We're looking for the 'stats' table (regular season), not 'stats_playoffs'
-    table = soup.find("table", {"id": "stats"})
+    table = soup.find("table", {"id": "stats_playoffs"})
     if not table:
         for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
             if 'id="stats"' in comment:
@@ -154,6 +155,9 @@ for player in players:
         print("❌ No regular season stats table found. Skipping player.")
         continue
     print("✅ Found 'stats' table.")
+    
+    
+    
 
     # --- Stats Mapping ---
     STAT_KEYS = {

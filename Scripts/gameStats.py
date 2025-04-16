@@ -7,6 +7,7 @@ import os
 import re
 
 # --- MySQL Connect ---
+# ===================== 
 # Connects to the MySQL database using the mysql-connector-python library.
 # Make sure to install it using pip if you haven't already:
 # pip install mysql-connector-python
@@ -20,57 +21,46 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-# Set the season ID for the 2024 Season
-# LOG_FILE is the name of the log file where failed attempts will be recorded.
-# These ae used to track the players that could not find stats for on the website.
+
+
+# --- Constants ---
+# =================
+# The season ID for the current season is set to 2425.
+# This ID is used to identify the season in the database.
+# The log file name is set to "slug_failures.log".
+# This file will be used to log any failures in finding player stats
+# For example, if the player page does not exist or the name/birthdate do not match.
 season_id = 2425 
 LOG_FILE = "slug_failures.log"
 
-# --- Execute SQL Query For Failures ---
-# This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table,
-# but only for the PlayerIDs that previously failed slug matching attempts.
-# The results are ordered by PlayerID in ascending order.
-
-# target_ids = [
-#     99, 127, 131, 132, 189, 191, 196, 202, 216, 241, 253, 254, 255, 256, 257, 262,
-#     276, 286, 289, 295, 298, 305, 310, 315, 327, 330, 352, 362, 363, 399, 402, 464, 466, 471, 482,
-#     489, 505, 530, 533, 537, 561, 597, 598, 599, 621, 637, 664, 691, 699, 701, 709, 710, 770, 789,
-#     799, 806, 830, 876, 903, 908, 940, 944, 947, 948, 970, 972, 973, 975, 1005, 1010, 1031, 1077,
-#     1078, 1103, 1129, 1152, 1185, 1194, 1197, 1211, 1212, 1244, 1262, 1265, 1333, 1341, 1370, 1371,
-#     1419, 1471, 1523, 1530, 1545, 1556, 1558, 1561, 1604, 1606, 1629, 1643, 1648, 1655, 1667, 1683,
-#     1695, 1698, 1725, 1731, 1733, 1745, 1759, 1761, 1773, 1795, 1796, 1862, 1863, 1864, 1867, 1921,
-#     1928, 1932, 1942, 1991, 2012, 2022, 2029, 2069, 2085, 2086, 2092, 2093, 2101, 2108, 2114, 2129,
-#     2164
-# ]
-
-# # Format the list as a tuple in SQL
-# format_strings = ','.join(['%s'] * len(target_ids))
-# query = f"""
-#     SELECT PlayerID, FirstName, LastName, BirthDate
-#     FROM Player
-#     WHERE PlayerID IN ({format_strings})
-#     ORDER BY PlayerID ASC
-# """
-# cursor.execute(query, tuple(target_ids))
-# players = cursor.fetchall()
 
 
 # --- Execute SQL Query For All Players ---
+# =========================================
 # This SQL query selects the PlayerID, FirstName, LastName, and BirthDate from the Player table.
 # The results are ordered by PlayerID in ascending order.
-cursor.execute("SELECT PlayerID, FirstName, LastName, BirthDate FROM Player WHERE PlayerID >= 347 ORDER BY PlayerID ASC")
+cursor.execute("""
+               SELECT PlayerID, FirstName, LastName, BirthDate 
+                    FROM Player 
+                    ORDER BY PlayerID ASC
+                """)
 players = cursor.fetchall()
 
 
 # --- Rate Limit Handling ---
-# To avoid rate limits, we fetch only 20 pages (URLs) per minute.
+# ===========================
+# To avoid rate limits, we fetch only 18 pages (URLs) per minute.
 # After 20 fetches, the script pauses for 60 seconds before continuing.
-URL_LIMIT = 15
+# Initialize the URL counter and last reset time.
+URL_LIMIT = 18
 URL_RESET_INTERVAL = 60  # seconds
 url_counter = 0
 last_reset_time = time.time()
 
+
+
 # --- Helper: Normalize Names for Slug Construction ---
+# =====================================================
 # Handles edge cases in names like apostrophes, periods, compound names, and short last names.
 def normalize_slug_prefix(last_name, first_name):
     import re
@@ -93,7 +83,10 @@ def normalize_slug_prefix(last_name, first_name):
     # Combine and format
     return (ln_padded + fn[:2]).title()
 
-# --- Loop through each player ---
+
+
+# --- Loop through each player from the database ---
+# ==================================================
 # For each player, we will try to find their stats on the Pro Football Reference website.
 # First we extract the PlayerID, FirstName, LastName, and BirthDate from the player tuple.
 # This is done so we can construct the expected URL and check if the stats are available.
@@ -102,6 +95,7 @@ for player in players:
     expected_name = f"{first_name} {last_name}".lower()
     expected_birth = birth_date.strftime("%Y-%m-%d")
     print(f"\n🎯 Looking for: {expected_name} (Born {expected_birth})")
+
 
     # --- Construct Slug (URL) ---
     # The slug_letter is the first letter of the last name, converted to uppercase.
@@ -112,10 +106,12 @@ for player in players:
     slug_prefix = normalize_slug_prefix(last_name, first_name)
     found = False
 
+
     # --- Try Slugs ---
     # This loop tries to construct the URL for the player's gamelog page.
-    # It appends a two-digit suffix (00 to 04) to the slug_prefix and constructs the URL.
     # This is because the prefix is not always unique, so we need to try different combinations.
+    # contunues to update current_time and check if the URL limit has been reached.
+    # If the URL limit is reached, it sleeps for the remaining time before continuing.
     for i in range(8):
         current_time = time.time()
         if url_counter >= URL_LIMIT:
@@ -124,16 +120,26 @@ for player in players:
                 wait_time = URL_RESET_INTERVAL - elapsed
                 print(f"⏳ URL limit reached. Sleeping for {int(wait_time)} seconds...")
                 time.sleep(wait_time)
-            url_counter = 0
-            last_reset_time = time.time()
-
+            url_counter = 0 # reset the counter after sleeping
+            last_reset_time = time.time() # update the last reset time
+        
+        
+        # --- Construct the slug and URL ---
+        # The slug is constructed by taking the slug_prefix and appending a two-digit suffix.
+        # From this it creates the URL for the player's gamelog page.
+        # Increasing the URL Counter each time to make sure we don't exceed the limit.
         suffix = f"{i:02d}"
         slug = f"{slug_prefix}{suffix}"
         url = f"https://www.pro-football-reference.com/players/{slug_letter}/{slug}/gamelog/2024/"
         print(f"🔍 Trying slug: {slug} → {url}")
-
         url_counter += 1  # ✅ Count all fetches regardless of success
 
+
+        # --- Try to load the page ---
+        # We use the requests library to fetch the page.
+        # If the page loads successfully, we parse it using BeautifulSoup.
+        # If it fails, we catch the exception and print a message, then continue to the next slug.
+        # (Breaking the loop for this slug if it fails)
         try:
             response = requests.get(url, headers={
                 'User-Agent': 'Mozilla/5.0',
@@ -145,7 +151,7 @@ for player in players:
             continue
 
 
-        # --- Parse the page ---
+        # --- Check Page and Player Match ---
         # If the page loads successfully, we parse it using BeautifulSoup.
         # But first we need to identify if it the player that we are looking for.
         # We look for the player's name and birthdate in the HTML.
@@ -164,10 +170,13 @@ for player in players:
             print("❌ Name or birthdate not found.")
             continue
 
+
+        # --- Extract Name and Birthdate ---
         # Extract the player's name and birthdate from the HTML.
         # The name is extracted from the <h1> tag and the birthdate from the <span> tag with id "necro-birth".
         page_name = name_tag.text.strip().lower()
         page_birth = birth_tag.get("data-birth", "").strip()
+
 
         # --- Check for match ---
         # We check if the extracted name and birthdate match the expected values.
@@ -184,7 +193,8 @@ for player in players:
 
 
 
-    # --- Check if found ---
+    # --- Log Failure ---
+    # ===================
     # If found is still False after trying all slugs, we log the failure.
     # We create a log line with the player's ID, name, birthdate, and the slugs that were tried.
     # We also write this log line to the log file.
@@ -205,124 +215,165 @@ for player in players:
         continue
 
 
+# --- Player Found Scrape the Stats ---
+# =====================================
+# If the Player is found, we proceed to scrape the stats from the page.
+# We need to be sure to check both the regular season and playoffs stats.
+# Assigning a Label to the regular season and playoffs stats.
+for table_id in ["stats", "stats_playoffs"]:
+    label = "Regular Season" if table_id == "stats" else "Playoffs"
+    print(f"\n📊 Checking {label} stats for {expected_name.title()}...")
 
-    # --- Locate Stats Table ---
-    # We look for the stats table in the HTML.
-    # The table is usually embedded in a comment, so we need to search for it.
-    table = soup.find("table", {"id": "stats"})
+
+    # --- Find the table in the HTML ---
+    # First we try to find the table directly using the table_id.
+    # If not found, we look for it in the comments (for some reason, the table is sometimes commented out).
+    # We use BeautifulSoup to parse the HTML and find the table with the specified ID.
+    table = soup.find("table", {"id": table_id})
     if not table:
         for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
-            if 'id="stats"' in comment:
-                table = BeautifulSoup(comment, "html.parser").find("table", {"id": "stats"})
+            if f'id="{table_id}"' in comment:
+                table = BeautifulSoup(comment, "html.parser").find("table", {"id": table_id})
                 break
-
     if not table:
-        print("❌ Could not find 'stats' table.")
+        print(f"🚫 {label} table ('{table_id}') not found. Skipping.")
         continue
-    print("✅ Found 'stats' table.")
-
+    print(f"✅ Found '{table_id}' table.")
 
 
     # --- Stats Mapping ---
-    # This dictionary maps the stats from the website to the database fields.
-    # The keys are the stats as they appear on the website, and the values are the corresponding database fields.
+    # We define a mapping of the stats from the table to the database fields.
+    # This mapping is used to convert the stats from the table format to the database format.
     STAT_KEYS = {
-        'pass_att': 'PassingAttempts',
-        'pass_cmp': 'PassingCompletions',
+        
+        # Offensive stats
+        'pass_att': 'PassingAttempts', 
+        'pass_cmp': 'PassingCompletions', 
         'pass_yds': 'PassingYards',
-        'pass_td': 'PassingTDs',
-        'pass_int': 'OffensiveInterceptions',
+        'pass_td': 'PassingTDs', 
+        'pass_int': 'OffensiveInterceptions', 
         'fumbles': 'OffensiveFumbles',
-        'rush_att': 'RushingAttempts',
-        'rush_yds': 'RushingYards',
+        'rush_att': 'RushingAttempts', 
+        'rush_yds': 'RushingYards', 
         'rush_td': 'RushingTDs',
-        'rec': 'Receptions',
-        'rec_yds': 'ReceivingYards',
+        'rec': 'Receptions', 
+        'rec_yds': 'ReceivingYards', 
         'rec_td': 'ReceivingTDs',
-        'tackles_combined': 'Tackles',
-        'sacks': 'Sacks',
+        
+        # Defensive stats
+        'tackles_combined': 'Tackles', 
+        'sacks': 'Sacks', 
         'fumbles_forced': 'ForcedFumbles',
-        'def_int': 'DefensiveInterceptions',
-        'def_int_yds': 'DefensiveYards',
+        'def_int': 'DefensiveInterceptions', 
+        'def_int_yds': 'DefensiveYards', 
         'def_int_td': 'DefensiveTDs',
+        
+        # Special teams stats
         'fgm': 'FieldGoalsMade',
-        'fga': 'FieldGoalsAttempted',
+        'fga': 'FieldGoalsAttempted', 
         'xpm': 'ExtraPointsMade',
-        'xpa': 'ExtraPointsAttempted',
-        'punt': 'PuntsAttempted',
+        'xpa': 'ExtraPointsAttempted', 
+        'punt': 'PuntsAttempted', 
         'punt_yds': 'PuntsYards'
     }
 
-    
-    
-    # Finds all the rows in the table body (tbody)
-    # Each row represents a game played by the player.
-    # the "thread" class is used to identify the header row, which we skip.
-    # The "partial_table" class is used to identify rows that are marked as "Did Not Play".
+
+
+    # --- Populate the GameStats Table ---
+    # ====================================
+    # --- Loop through all <tr> rows inside the <tbody> of the stats table ---
+    # <tbody> is the HTML tag that contains all data rows in a table (excluding the column headers)
+    # Each <tr> (table row) inside <tbody> represents a single game played by the player
+    # This loop processes each game row and extracts stats for insertion into the database
     rows = table.find("tbody").find_all("tr")
+
+
+    # --- Enumerate through each table row (<tr>) ---
+    # 'idx' is the index (0-based) of the row within the list of all rows
+    # 'row' is the BeautifulSoup object representing one <tr> (a single game stat line)
     for idx, row in enumerate(rows):
+        
+        
+        # --- Skip rows that are just internal headers ---
+        # Some tables use additional header rows (with class="thead") within <tbody> to separate sections
         if "thead" in row.get("class", []):
             continue
+
+
+        # --- Skip rows for players who did not participate in the game ---
+        # Rows with class="partial_table" are placeholders (e.g., "Did Not Play", "Inactive")
         if "partial_table" in row.get("class", []):
-            date_str = row.find("td", {"data-stat": "date"})
-            date_display = date_str.text if date_str else f"row {idx}"
-            print(f"⏭️ Skipping {date_display}: row marked as 'partial_table' (Did Not Play)")
             continue
-        
-        # --- Extract Player Stats ---
-        # Each row contains the player's stats for a specific game.
-        # We extract the data from the table cells (td) using the find_all method.
-        cells = row.find_all("td")
-        if not cells:
-            continue
-        
-        # The data-stat attribute is used to identify the specific stat. (Located in the <td> tag)
-        # The first stat we extract is the date of the game. (To match the game with the database)
-        row_data = {c.get("data-stat"): c.text.strip() for c in cells if c.get("data-stat")}
+
+
+        # --- Extract the stat data from each <td> (table cell) inside the row ---
+        # Each cell contains one stat value and is marked with a "data-stat" attribute (e.g., data-stat="pass_yds")
+        # This dictionary comprehension collects all available stats for the row
+        row_data = {
+            c.get("data-stat"): c.text.strip()  # key = stat name, value = stat value as clean string
+            for c in row.find_all("td")         # get all <td> elements
+            if c.get("data-stat")               # only include cells with a data-stat attribute
+        }
+
+
+        # --- Extract the game date string ---
+        # It should be in the format 'YYYY-MM-DD'; if missing or invalid, skip the row
+        # try to convert the string to a date object for the database format year-month-day
+        # if conversion fails, skip the row
         date_str = row_data.get("date", "")
         if not date_str or len(date_str) != 10:
             continue
-        
-        # Format the date string to match the database format (YYYY-MM-DD)
-        # We use the strptime method to parse the date string into a datetime object. 
-        # Then we convert it to a date object.
         try:
             game_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except:
             continue
 
-        # --- Check if game date is valid ---
-        # We now need the TeamID from the database to check if the game exists.
+
+        # --- Get the team abbreviation (e.g., 'BUF', 'KC') from the row ---
+        # This is done so we know which team the player played for in this game (TeamID)
+        # When then can look up the TeamID with this abbreviation in the Team table
+        # But this will only provide us with the whole tuple, so we need to extract the TeamID
         team_abbr = row_data.get("team_name_abbr", "").upper()
-        cursor.execute("SELECT TeamID FROM Team WHERE Abbreviation = %s", (team_abbr,))
+        cursor.execute("""
+                       SELECT TeamID 
+                            FROM Team 
+                            WHERE Abbreviation = %s""", (team_abbr,))
         team_row = cursor.fetchone()
         if not team_row:
             print(f"❌ Unknown team: {team_abbr}")
-            print("🛑 Stopping execution due to unmatched team.")
-            exit()
+            continue  # Skip if team not found in Team table
+
+
+        # --- Extract TeamID from the result tuple ---
+        # TeamID will always be the first column in the result set (Auto-generated by MySQL)
         team_id = team_row[0]
 
-        # With the teamID and the game date, we can check if the game exists in the database.
-        # We do this by querying the Game table for a matching game date and team ID.
-        # Where the HomeTeamID or AwayTeamID matches the team ID.
+
+        # --- Look for the corresponding GameID in the Game table ---
+        # Match by date, season ID, and team (either home or away)
+        # Date is the game date, SeasonID is the constant and TeamID is EITHER home or away team
         cursor.execute("""
-            SELECT GameID FROM Game
-            WHERE GameDate = %s AND SeasonID = %s
-            AND (HomeTeamID = %s OR AwayTeamID = %s)
+                        SELECT GameID FROM Game
+                            WHERE GameDate = %s AND SeasonID = %s
+                            AND (HomeTeamID = %s OR AwayTeamID = %s)
         """, (game_date, season_id, team_id, team_id))
         game_row = cursor.fetchone()
         if not game_row:
             print(f"❌ No game match on {game_date} with team {team_abbr}")
-            print("🛑 Stopping execution due to unmatched game.")
-            exit()
-        game_id = game_row[0]
+            continue
 
-        # We Now can extract the player's stats from the row.
-        # We use a helper function to get the stat value from the row data.
-        # The function takes the stat name, a default value, and a cast function.
-        # The default value is used if the stat is not found or is empty.
+        # --- Extract the GameID from the result ---
+        # Same as above for TeamID, GameID is always the first column in the result set
+        # We need this to insert the stats into the GameStats table
+        game_id = game_row[0]
+        
+
+        # --- Define helper to get and convert a stat value safely ---
+        # This function retrieves a stat value from the row_data dictionary (above)
+        # It removes the percent sign if present and converts it to the appropriate type (INT)
+        # If the stat is not found or conversion fails, it returns a default value (0)
         def get_stat(stat, default=0, cast=int):
-            raw = row_data.get(stat, '').replace('%', '')
+            raw = row_data.get(stat, '').replace('%', '')  # remove percent sign if present
             if raw == '':
                 return default
             try:
@@ -330,57 +381,70 @@ for player in players:
             except:
                 return default
 
-        # With the dictionary comprehension, we create a new dictionary called stats.
-        # This dictionary contains the stats for the player in the current game.
-        # We use the STAT_KEYS dictionary to map the stats from the website to the database fields.
-        # The get_stat function is used to extract the value for each stat.
-        # The cast function is used to convert the value to the appropriate type.
+
+        # --- Map scraped stats to database fields ---
+        # We use the STAT_KEYS dictionary to map the scraped stats to the database fields
+        # The db_feild is the name of the field in the database (e.g., PassingAttempts)
         stats = {
             db_field: get_stat(stat, cast=float if db_field == 'Sacks' else int)
             for stat, db_field in STAT_KEYS.items()
         }
 
-        # --- Insert or Update Game Stats ---
-        # The Insert Felds are the columns in the GameStats table.
-        # We create a list of fields to insert into the database.
-        # the placeholders are used to insert the stats as a comma-separated string.
-        # The update clause is used to update the stats if the game already exists. (I.E if the player has already played in that game)
+
+        # --- Prepare fields for SQL INSERT ---
+        # GameID is the Primary key and PlayerID and TeamID are Foreign keys
+        # The List of the stat keys are in the order they are in the database
         insert_fields = ['GameID', 'PlayerID', 'TeamID'] + list(stats.keys())
+
+        # --- Generate placeholders for parameterized query (e.g., '%s, %s, %s, ...') ---
+        # For now we create a string with the same number of placeholders as there are fields
+        # This is done so we can use a parameterized query to prevent SQL injection
         placeholders = ', '.join(['%s'] * len(insert_fields))
-        update_clause = ', '.join([f"{f}=VALUES({f})" for f in insert_fields if f not in ('GameID', 'PlayerID', 'TeamID')])
-        
-        # The SQL query uses the INSERT INTO statement to insert the stats into the GameStats table.
-        # We set up what the cursor should execute by using the SQL query and the values.
-        # The ON DUPLICATE KEY UPDATE clause is used to update the stats if the game already exists.
+
+
+        # --- Create ON DUPLICATE KEY UPDATE clause ---
+        # If a record already exists for this (GameID, PlayerID, TeamID), update the stats instead of inserting a duplicate
+        # This is so we can update the stats for a player if they have already played in this game (or need to update a specific stat)
+        # More or less to make sure we don't have duplicates in the database
+        update_clause = ', '.join([
+            f"{f}=VALUES({f})"
+            for f in insert_fields if f not in ('GameID', 'PlayerID', 'TeamID')
+        ])
+
+
+        # --- Prepare the SQL query ---
+        # =============================
+        # insert felds are the columns to insert into in the database
+        # placeholders are the values to insert (e.g., '%s, %s, %s, ...')
+        # The ON DUPLICATE KEY UPDATE clause specifies what to do if a duplicate key is found
         sql = f"""
             INSERT INTO GameStats ({', '.join(insert_fields)})
-            VALUES ({placeholders})
-            ON DUPLICATE KEY UPDATE {update_clause}
+                VALUES ({placeholders})
+                ON DUPLICATE KEY UPDATE {update_clause}
         """
         values = [game_id, player_id, team_id] + list(stats.values())
+
+
+        # --- Execute the query and commit the changes ---
+        # Puts the values into the placeholders in the SQL query
+        # Then commits the changes to the database
         cursor.execute(sql, values)
         conn.commit()
-        print(f"✅ Inserted stats for {game_date} (Team: {team_abbr})")
+
+        # --- Print confirmation for this row ---
+        # THis is done for debugging purposes to see which rows are being inserted
+        # Or which rows are being skipped since the player was inactive or did not play (Above)
+        print(f"✅ Inserted {label} stats for {game_date} (Team: {team_abbr})")
 
 
 
-# --- Done ---
+
+# --- Close Cursor and Connection ---
+# ===================================
 # After processing all players, we close the database connection.
 # We commit the changes to the database and close the cursor and connection.
 cursor.close()
 conn.close()
 print("\n🧹 Done with players.")
 
-
-
-# --- Print Log File Contents (Optional Summary) ---
-# At the end of the script, print out all failed player match attempts
-# This makes it easy to verify which players could not be found during the run
-if os.path.exists(LOG_FILE):
-    print(f"\n📄 Contents of {LOG_FILE}:")
-    with open(LOG_FILE, "r") as log:
-        print(log.read().strip())
-else:
-    print("\n✅ No failed player matches logged.")
-    
     
