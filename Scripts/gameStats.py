@@ -78,9 +78,8 @@ def normalize_slug_prefix(last_name, first_name):
         ln = re.sub(r"[^a-zA-Z]", "", last_name)
 
     # Pad short last names with 'x' if fewer than 4 characters
-    ln_padded = ln[:4].ljust(4, 'x')
-
     # Combine and format
+    ln_padded = ln[:4].ljust(4, 'x')
     return (ln_padded + fn[:2]).title()
 
 
