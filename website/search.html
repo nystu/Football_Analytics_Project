@@ -1,122 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Search Players</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        @keyframes scrollBackground {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        body {
+            background-image: url('https://logos-world.net/wp-content/uploads/2023/08/NFL-team-logos-Your-guide-to-every-National-Football-League-logo.png');
+            background-repeat: repeat;
+            background-size: contain;
+            background-color: #212529;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            animation: scrollBackground 60s linear infinite;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(33, 37, 41, 0.8);
+            z-index: 0;
+        }
+
+        #mainWrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        .toggle-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .range-wrapper {
+            background-color: #f1f3f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            box-shadow: inset 0 0 0.25rem rgba(0, 0, 0, 0.1);
+        }
+
+        .connected-slider {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .connected-slider input[type="range"] {
+            flex: 1;
+            margin: 0;
+        }
+
+        .connected-slider button {
+            white-space: nowrap;
+        }
+    </style>
 </head>
 
-<body style="background-color: #f8f9fa;">
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">Search Players</h2>
+<body>
+    <div class="overlay"></div>
 
-        <form action="/search-results.html" method="GET">
-            <!-- Team Search -->
-            <div class="mb-4 position-relative">
-                <label for="teamSearch" class="form-label">Team</label>
-                <input type="text" id="teamSearch" name="team" class="form-control" placeholder="Start typing a team..." oninput="filterTeams()">
-                <ul id="teamList" class="list-group position-absolute w-100 z-3"></ul>
-            </div>
-
-            <!-- First Name -->
-            <div class="mb-3">
-                <label for="firstName" class="form-label">First Name</label>
-                <input type="text" id="firstName" name="firstName" class="form-control">
-            </div>
-
-            <!-- Last Name -->
-            <div class="mb-3">
-                <label for="lastName" class="form-label">Last Name</label>
-                <input type="text" id="lastName" name="lastName" class="form-control">
-            </div>
-
-            <!-- Birth Date -->
-            <div class="mb-3">
-                <label for="birthDate" class="form-label">Birth Date</label>
-                <input type="date" id="birthDate" name="birthDate" class="form-control">
-            </div>
-
-            <!-- College -->
-            <div class="mb-3">
-                <label for="college" class="form-label">College</label>
-                <input type="text" id="college" name="college" class="form-control">
-            </div>
-
-            <!-- Weight Range Sliders -->
-            <div class="mb-4">
-                <label class="form-label">Weight Range (lbs): 
-                    <span id="weightMinValue">180</span> - 
-                    <span id="weightMaxValue">240</span>
-                </label>
-                <div class="d-flex align-items-center gap-2">
-                    <input type="range" class="form-range" min="150" max="350" step="1" id="weightMin" name="weightMin" value="180" oninput="updateWeightRange()">
-                    <input type="range" class="form-range" min="150" max="350" step="1" id="weightMax" name="weightMax" value="240" oninput="updateWeightRange()">
+    <div id="mainWrapper" class="d-flex justify-content-center align-items-center min-vh-100">
+        <div class="bg-white text-dark rounded-3 shadow-lg px-5 py-4" style="width: 100%; max-width: 600px;">
+            <h1 class="text-center mb-4">Search Players</h1>
+            <form action="/search-results.html" method="GET">
+                <!-- Team Search -->
+                <div class="mb-4 position-relative">
+                    <label for="teamSearch" class="form-label">Team</label>
+                    <input type="text" id="teamSearch" name="team" class="form-control" placeholder="Start typing a team..." oninput="filterTeams()">
+                    <ul id="teamList" class="list-group position-absolute w-100 z-3"></ul>
                 </div>
-            </div>
 
-            <!-- Height Range Sliders -->
-            <div class="mb-4">
-                <label class="form-label">Height Range (inches): 
-                    <span id="heightMinValue">68</span> - 
-                    <span id="heightMaxValue">76</span>
-                </label>
-                <div class="d-flex align-items-center gap-2">
-                    <input type="range" class="form-range" min="60" max="84" step="1" id="heightMin" name="heightMin" value="68" oninput="updateHeightRange()">
-                    <input type="range" class="form-range" min="60" max="84" step="1" id="heightMax" name="heightMax" value="76" oninput="updateHeightRange()">
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" id="firstName" name="firstName" class="form-control">
                 </div>
-            </div>
 
-            <!-- Position Dropdown -->
-            <div class="mb-4">
-                <label for="position" class="form-label">Position</label>
-                <select id="position" name="position" class="form-select">
-                    <option value="">Any</option>
-                    <option value="QB">Quarterback (QB)</option>
-                    <option value="WR">Wide Receiver (WR)</option>
-                    <option value="RB">Running Back (RB)</option>
-                    <option value="TE">Tight End (TE)</option>
-                    <option value="LB">Linebacker (LB)</option>
-                    <option value="CB">Cornerback (CB)</option>
-                    <option value="S">Safety (S)</option>
-                    <option value="DL">Defensive Lineman (DL)</option>
-                    <option value="OL">Offensive Lineman (OL)</option>
-                </select>
-            </div>
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" class="form-control">
+                </div>
 
-            <!-- Submit Button -->
-            <div class="d-grid mb-3">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
+                <div class="mb-3">
+                    <label for="birthDate" class="form-label">Birth Date</label>
+                    <input type="date" id="birthDate" name="birthDate" class="form-control">
+                </div>
 
-            <!-- Back Button -->
-            <div class="text-center">
-                <a href="homepage.html" class="btn btn-outline-secondary">Back to Homepage</a>
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label for="college" class="form-label">College</label>
+                    <input type="text" id="college" name="college" class="form-control">
+                </div>
+
+                <!-- Weight Range -->
+                <div class="mb-4">
+                    <label class="form-label">Weight Range (lbs): 
+                        <span id="weightMinValue">Any</span>
+                        <span id="weightMaxValue"></span>
+                    </label>
+                    <div class="range-wrapper connected-slider">
+                        <input type="range" min="100" max="400" step="1" id="weightMin" name="weightMin" value="100" oninput="disableWeightAny(); updateWeightRange()" disabled>
+                        <button type="button" id="weightAnyBtn" class="btn btn-outline-secondary btn-sm toggle-btn active" onclick="toggleWeightAny()">Any</button>
+                        <input type="range" min="100" max="400" step="1" id="weightMax" name="weightMax" value="100" oninput="disableWeightAny(); updateWeightRange()" disabled>
+                    </div>
+                </div>
+
+                <!-- Height Range -->
+                <div class="mb-4">
+                    <label class="form-label">Height Range (inches): 
+                        <span id="heightMinValue">Any</span>
+                        <span id="heightMaxValue"></span>
+                    </label>
+                    <div class="range-wrapper connected-slider">
+                        <input type="range" min="60" max="96" step="1" id="heightMin" name="heightMin" value="60" oninput="disableHeightAny(); updateHeightRange()" disabled>
+                        <button type="button" id="heightAnyBtn" class="btn btn-outline-secondary btn-sm toggle-btn active" onclick="toggleHeightAny()">Any</button>
+                        <input type="range" min="60" max="96" step="1" id="heightMax" name="heightMax" value="60" oninput="disableHeightAny(); updateHeightRange()" disabled>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="position" class="form-label">Position</label>
+                    <select id="position" name="position" class="form-select">
+                        <option value="">Any</option>
+                        <option value="QB">Quarterback (QB)</option>
+                        <option value="WR">Wide Receiver (WR)</option>
+                        <option value="RB">Running Back (RB)</option>
+                        <option value="TE">Tight End (TE)</option>
+                        <option value="LB">Linebacker (LB)</option>
+                        <option value="CB">Cornerback (CB)</option>
+                        <option value="S">Safety (S)</option>
+                        <option value="DL">Defensive Lineman (DL)</option>
+                        <option value="OL">Offensive Lineman (OL)</option>
+                    </select>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+
+                <div class="text-center">
+                    <a href="homepage.html" class="btn btn-outline-secondary">Back to Homepage</a>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Script Section -->
     <script>
-        const teams = [
-            "Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills",
-            "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns",
-            "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers",
-            "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs",
-            "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins",
-            "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants",
-            "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers",
-            "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"
-        ];
+        const teams = ["Arizona Cardinals", "Atlanta Falcons", "Baltimore Ravens", "Buffalo Bills", "Carolina Panthers", "Chicago Bears", "Cincinnati Bengals", "Cleveland Browns", "Dallas Cowboys", "Denver Broncos", "Detroit Lions", "Green Bay Packers", "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Kansas City Chiefs", "Las Vegas Raiders", "Los Angeles Chargers", "Los Angeles Rams", "Miami Dolphins", "Minnesota Vikings", "New England Patriots", "New Orleans Saints", "New York Giants", "New York Jets", "Philadelphia Eagles", "Pittsburgh Steelers", "San Francisco 49ers", "Seattle Seahawks", "Tampa Bay Buccaneers", "Tennessee Titans", "Washington Commanders"];
 
         function filterTeams() {
             const input = document.getElementById('teamSearch').value.toLowerCase();
             const list = document.getElementById('teamList');
             list.innerHTML = '';
-
             const filtered = teams.filter(team => team.toLowerCase().includes(input));
-
             filtered.forEach(team => {
                 const item = document.createElement('li');
                 item.className = 'list-group-item';
@@ -125,40 +172,95 @@
                 item.onclick = () => {
                     document.getElementById('teamSearch').value = team;
                     list.innerHTML = '';
+                    updateAnimatedBackground();
                 };
                 list.appendChild(item);
             });
         }
 
         function updateWeightRange() {
-            const min = document.getElementById('weightMin');
-            const max = document.getElementById('weightMax');
-            const minValue = Math.min(parseInt(min.value), parseInt(max.value));
-            const maxValue = Math.max(parseInt(min.value), parseInt(max.value));
-            document.getElementById('weightMinValue').textContent = minValue;
-            document.getElementById('weightMaxValue').textContent = maxValue;
+            const min = parseInt(document.getElementById('weightMin').value);
+            const max = parseInt(document.getElementById('weightMax').value);
+            document.getElementById('weightMinValue').textContent = Math.min(min, max);
+            document.getElementById('weightMaxValue').textContent = Math.max(min, max);
         }
 
         function updateHeightRange() {
-            const min = document.getElementById('heightMin');
-            const max = document.getElementById('heightMax');
-            const minValue = Math.min(parseInt(min.value), parseInt(max.value));
-            const maxValue = Math.max(parseInt(min.value), parseInt(max.value));
-            document.getElementById('heightMinValue').textContent = minValue;
-            document.getElementById('heightMaxValue').textContent = maxValue;
+            const min = parseInt(document.getElementById('heightMin').value);
+            const max = parseInt(document.getElementById('heightMax').value);
+            document.getElementById('heightMinValue').textContent = Math.min(min, max);
+            document.getElementById('heightMaxValue').textContent = Math.max(min, max);
+        }
+
+        function toggleWeightAny() {
+            const btn = document.getElementById('weightAnyBtn');
+            const isActive = btn.classList.toggle('active');
+            document.getElementById('weightMin').disabled = isActive;
+            document.getElementById('weightMax').disabled = isActive;
+            if (isActive) {
+                document.getElementById('weightMinValue').textContent = 'Any';
+                document.getElementById('weightMaxValue').textContent = '';
+            } else {
+                updateWeightRange();
+            }
+        }
+
+        function toggleHeightAny() {
+            const btn = document.getElementById('heightAnyBtn');
+            const isActive = btn.classList.toggle('active');
+            document.getElementById('heightMin').disabled = isActive;
+            document.getElementById('heightMax').disabled = isActive;
+            if (isActive) {
+                document.getElementById('heightMinValue').textContent = 'Any';
+                document.getElementById('heightMaxValue').textContent = '';
+            } else {
+                updateHeightRange();
+            }
+        }
+
+        function disableWeightAny() {
+            const btn = document.getElementById('weightAnyBtn');
+            if (btn.classList.contains('active')) {
+                btn.classList.remove('active');
+                document.getElementById('weightMin').disabled = false;
+                document.getElementById('weightMax').disabled = false;
+                updateWeightRange();
+            }
+        }
+
+        function disableHeightAny() {
+            const btn = document.getElementById('heightAnyBtn');
+            if (btn.classList.contains('active')) {
+                btn.classList.remove('active');
+                document.getElementById('heightMin').disabled = false;
+                document.getElementById('heightMax').disabled = false;
+                updateHeightRange();
+            }
+        }
+
+        function updateAnimatedBackground() {
+            const teamValue = document.getElementById('teamSearch').value.trim().toLowerCase();
+            const isMatch = teams.some(team => team.toLowerCase() === teamValue);
+            if (!isMatch) {
+                document.body.classList.add('animated-bg');
+            } else {
+                document.body.classList.remove('animated-bg');
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            updateWeightRange();
-            updateHeightRange();
+            document.getElementById('weightAnyBtn').classList.add('active');
+            document.getElementById('heightAnyBtn').classList.add('active');
+            updateAnimatedBackground();
 
             const teamInput = document.getElementById('teamSearch');
             const teamList = document.getElementById('teamList');
-
+            teamInput.addEventListener('input', () => {
+                filterTeams();
+                updateAnimatedBackground();
+            });
             teamInput.addEventListener('blur', () => {
-                setTimeout(() => {
-                    teamList.innerHTML = '';
-                }, 150);
+                setTimeout(() => { teamList.innerHTML = ''; }, 150);
             });
         });
     </script>
